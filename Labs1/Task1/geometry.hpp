@@ -15,7 +15,11 @@ inline bool nearlyEqual(double a, double b) {
 //Вектор: смещение (dx, dy)
 class Vector2D {
 public:
-    Vector2D(double dx, double dy) : _dx(dx), _dy(dy) {}
+    Vector2D(double dx, double dy) : _dx(dx), _dy(dy) {
+        if (!std::isfinite(dx) || !std::isfinite(dy)) {
+            throw std::invalid_argument("Vector2D: координаты должны быть конечными числами");
+        }
+    }
 
     double dx() const { return _dx; }
     double dy() const { return _dy; }
@@ -25,7 +29,7 @@ public:
     Vector2D operator-(const Vector2D& o) const { return {_dx - o._dx, _dy - o._dy}; }
     Vector2D operator*(double k) const { return {_dx * k, _dy * k}; }
     Vector2D operator/(double k) const {
-        if (nearlyEqual(k, 0.0)) {
+        if (k == 0.0) {  // ровно ноль: маленький делитель (1e-10) - законен
             throw std::invalid_argument("Vector2D: деление на ноль");
         }
         return {_dx / k, _dy / k};
@@ -44,7 +48,11 @@ private:
 //Точка
 class Point2D {
 public:
-    Point2D(double x, double y) : _x(x), _y(y) {}
+    Point2D(double x, double y) : _x(x), _y(y) {
+        if (!std::isfinite(x) || !std::isfinite(y)) {
+            throw std::invalid_argument("Point2D: координаты должны быть конечными числами");
+        }
+    }
 
     double x() const { return _x; }
     double y() const { return _y; }

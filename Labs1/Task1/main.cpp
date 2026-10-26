@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include "geometry.hpp"
 #include <memory>
@@ -25,6 +26,8 @@ void testVector() {
     CHECK(a != b);
     CHECK(nearlyEqual(Vector2D(3, 4).length(), 5.0));
     CHECK(throws([&] { return a / 0; }));
+    CHECK(!throws([&] { return a / 1e-10; }));   // маленький делитель - не ноль
+    CHECK(throws([] { return Vector2D(std::nan(""), 0); }));
     CHECK(a == Vector2D(1, 2));
 }
 
@@ -71,6 +74,7 @@ void testCircle() {
     CHECK(c.boundingBox() == Rect2D(Point2D(-1, -1), Point2D(3, 3)));
     CHECK(throws([] { Circle(Point2D(0, 0), 0); }));
     CHECK(throws([] { Circle(Point2D(0, 0), -5); }));
+    CHECK(throws([] { Circle(Point2D(0, 0), std::nan("")); }));
 }
 
 void testRectangle() {
@@ -121,6 +125,31 @@ void testGroup() {
 
     CHECK(throws([] { Group(nullptr); }));
     CHECK(throws([&] { g->add(nullptr); }));
+}
+
+void testGroupCycles() {
+    // 1) группу нельзя добавить в саму себя
+    {
+        auto g = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
+        Group* raw = g.get();
+        CHECK(throws([&] { raw->add(std::move(g)); }));
+        // g после этого уничтожена - к raw больше не обращаемся
+    }
+    // 2) нельзя добавить внешнюю группу в свою же вложенную (косвенный цикл)
+    {
+        auto outer = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
+        auto inner = std::make_unique<Group>(std::make_unique<Circle>(Point2D(5, 5), 1));
+        Group* innerRaw = inner.get();
+        outer->add(std::move(inner));
+        CHECK(throws([&] { innerRaw->add(std::move(outer)); }));
+    }
+    // 3) обычное вложение продолжает работать
+    {
+        auto a = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
+        auto b = std::make_unique<Group>(std::make_unique<Circle>(Point2D(9, 9), 1));
+        a->add(std::move(b));
+        CHECK(a->contains(Point2D(9, 9)));
+    }
 }
 
 void testPolymorphism() {
@@ -204,6 +233,7 @@ int main() {
     testRectangle();
     testSegment();
     testGroup();
+    testGroupCycles();
     testPolymorphism();
     testEditor();
     testRender();

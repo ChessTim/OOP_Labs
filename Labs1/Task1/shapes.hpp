@@ -32,13 +32,17 @@ public:
     virtual const Shape* find(const Point2D& p) const {
         return contains(p) ? this : nullptr;
     }
+
+    // true, если s - это сам объект или лежит где-то внутри него.
+    // Нужно группе, чтобы запретить циклы. Для простых фигур: только "я сам".
+    virtual bool holds(const Shape* s) const { return s == this; }
 };
 
 class Circle : public Shape {
 public:
     Circle(const Point2D& center, double radius) : _center(center), _radius(radius) {
-        if (radius <= 0) {
-            throw std::invalid_argument("Circle: радиус должен быть больше 0");
+        if (!std::isfinite(radius) || radius <= 0) {  // isfinite отсекает NaN и бесконечность
+            throw std::invalid_argument("Circle: радиус должен быть конечным и больше 0");
         }
     }
 
@@ -89,7 +93,7 @@ class Segment : public Shape {
 public:
     Segment(const Point2D& a, const Point2D& b, double tolerance = 0.5)
         : _a(a), _b(b), _tolerance(tolerance) {
-        if (tolerance < 0) {
+        if (!std::isfinite(tolerance) || tolerance < 0) {
             throw std::invalid_argument("Segment: погрешность не может быть отрицательной");
         }
     }
@@ -143,13 +147,18 @@ public:
         if (!shape) {
             throw std::invalid_argument("Group: нельзя добавить пустой указатель");
         }
+        // Защита от цикла: нельзя добавить в группу её саму
+        // или объект, внутри которого эта группа уже лежит.
+        if (shape->holds(this)) {
+            throw std::invalid_argument("Group: группа не может содержать саму себя");
+        }
         _children.push_back(std::move(shape));
     }
 
     Rect2D boundingBox() const override {
         Rect2D result = _children.front()->boundingBox();
-        for (const auto& child : _children) {
-            result = result.united(child->boundingBox());
+        for (size_t i = 1; i < _children.size(); ++i) {
+            result = result.united(_children[i]->boundingBox());
         }
         return result;
     }
@@ -179,6 +188,14 @@ public:
     }
 
     char symbol() const override { return '#'; }
+
+    bool holds(const Shape* s) const override {
+        if (s == this) return true;
+        for (const auto& child : _children) {
+            if (child->holds(s)) return true;
+        }
+        return false;
+    }
 
     const Shape* find(const Point2D& p) const override {
         for (auto it = _children.rbegin(); it != _children.rend(); ++it) {
