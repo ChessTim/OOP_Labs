@@ -3,8 +3,6 @@
 #include <stdexcept>
 #include <utility>
 
-// Предметная область: одна задача. Знает только про себя, ничего про кучу и планировщик.
-// Инварианты: id > 0, название не пустое, срок >= 0.
 class Task {
 public:
     Task(int id, std::string title, int priority, int deadline)

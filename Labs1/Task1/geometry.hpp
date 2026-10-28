@@ -12,7 +12,6 @@ inline bool nearlyEqual(double a, double b) {
     return std::fabs(a - b) <= EPS;
 }
 
-//Вектор: смещение (dx, dy)
 class Vector2D {
 public:
     Vector2D(double dx, double dy) : _dx(dx), _dy(dy) {
@@ -29,7 +28,7 @@ public:
     Vector2D operator-(const Vector2D& o) const { return {_dx - o._dx, _dy - o._dy}; }
     Vector2D operator*(double k) const { return {_dx * k, _dy * k}; }
     Vector2D operator/(double k) const {
-        if (k == 0.0) {  // ровно ноль: маленький делитель (1e-10) - законен
+        if (k == 0.0) {
             throw std::invalid_argument("Vector2D: деление на ноль");
         }
         return {_dx / k, _dy / k};
@@ -45,7 +44,6 @@ private:
     double _dy;
 };
 
-//Точка
 class Point2D {
 public:
     Point2D(double x, double y) : _x(x), _y(y) {
@@ -57,9 +55,7 @@ public:
     double x() const { return _x; }
     double y() const { return _y; }
 
-    // Точка + вектор = новая точка
     Point2D operator+(const Vector2D& v) const { return {_x + v.dx(), _y + v.dy()}; }
-    // Точка - точка = вектор между ними
     Vector2D operator-(const Point2D& o) const { return {_x - o._x, _y - o._y}; }
 
     bool operator==(const Point2D& o) const {
@@ -72,10 +68,8 @@ private:
     double _y;
 };
 
-//Прямоугольная область (границы включены)
 class Rect2D {
 public:
-    // min — левый нижний угол, max — правый верхний
     Rect2D(const Point2D& min, const Point2D& max) : _min(min), _max(max) {
         if (min.x() > max.x() || min.y() > max.y()) {
             throw std::invalid_argument("Rect2D: min должен быть не больше max");

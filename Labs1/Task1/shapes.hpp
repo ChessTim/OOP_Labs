@@ -33,15 +33,13 @@ public:
         return contains(p) ? this : nullptr;
     }
 
-    // true, если s - это сам объект или лежит где-то внутри него.
-    // Нужно группе, чтобы запретить циклы. Для простых фигур: только "я сам".
     virtual bool holds(const Shape* s) const { return s == this; }
 };
 
 class Circle : public Shape {
 public:
     Circle(const Point2D& center, double radius) : _center(center), _radius(radius) {
-        if (!std::isfinite(radius) || radius <= 0) {  // isfinite отсекает NaN и бесконечность
+        if (!std::isfinite(radius) || radius <= 0) {
             throw std::invalid_argument("Circle: радиус должен быть конечным и больше 0");
         }
     }
@@ -147,8 +145,6 @@ public:
         if (!shape) {
             throw std::invalid_argument("Group: нельзя добавить пустой указатель");
         }
-        // Защита от цикла: нельзя добавить в группу её саму
-        // или объект, внутри которого эта группа уже лежит.
         if (shape->holds(this)) {
             throw std::invalid_argument("Group: группа не может содержать саму себя");
         }

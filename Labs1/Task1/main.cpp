@@ -26,7 +26,7 @@ void testVector() {
     CHECK(a != b);
     CHECK(nearlyEqual(Vector2D(3, 4).length(), 5.0));
     CHECK(throws([&] { return a / 0; }));
-    CHECK(!throws([&] { return a / 1e-10; }));   // маленький делитель - не ноль
+    CHECK(!throws([&] { return a / 1e-10; }));
     CHECK(throws([] { return Vector2D(std::nan(""), 0); }));
     CHECK(a == Vector2D(1, 2));
 }
@@ -54,7 +54,6 @@ void testRect() {
     CHECK(*i == Rect2D(Point2D(2, 2), Point2D(4, 4)));
 
     CHECK(!(r & Rect2D(Point2D(10, 10), Point2D(11, 11))).has_value());
-
     CHECK((r & Rect2D(Point2D(4, 0), Point2D(8, 4))).has_value());
 
     CHECK(r.united(Rect2D(Point2D(3, 3), Point2D(9, 9))) == Rect2D(Point2D(0, 0), Point2D(9, 9)));
@@ -62,11 +61,10 @@ void testRect() {
     CHECK(r == Rect2D(Point2D(0, 0), Point2D(4, 4)));
 }
 
-
 void testCircle() {
     Circle c(Point2D(0, 0), 2);
     CHECK(c.contains(Point2D(0, 0)));
-    CHECK(c.contains(Point2D(2, 0)));      // граница
+    CHECK(c.contains(Point2D(2, 0)));
     CHECK(!c.contains(Point2D(2, 1)));
     CHECK(c.boundingBox() == Rect2D(Point2D(-2, -2), Point2D(2, 2)));
     c.move(Vector2D(1, 1));
@@ -90,14 +88,14 @@ void testRectangle() {
 void testSegment() {
     Segment s(Point2D(0, 0), Point2D(10, 0), 0.1);
     CHECK(s.contains(Point2D(5, 0)));
-    CHECK(s.contains(Point2D(5, 0.05)));   // в пределах погрешности
+    CHECK(s.contains(Point2D(5, 0.05)));
     CHECK(!s.contains(Point2D(5, 0.5)));
-    CHECK(s.contains(Point2D(10, 0)));     // конец отрезка
-    CHECK(!s.contains(Point2D(11, 0)));    // за концом
+    CHECK(s.contains(Point2D(10, 0)));
+    CHECK(!s.contains(Point2D(11, 0)));
     CHECK(s.boundingBox() == Rect2D(Point2D(0, 0), Point2D(10, 0)));
     Segment diag(Point2D(3, 4), Point2D(1, 2));
     CHECK(diag.boundingBox() == Rect2D(Point2D(1, 2), Point2D(3, 4)));
-    Segment dot(Point2D(1, 1), Point2D(1, 1), 0.1); // вырожденный отрезок
+    Segment dot(Point2D(1, 1), Point2D(1, 1), 0.1);
     CHECK(dot.contains(Point2D(1, 1)));
     CHECK(!dot.contains(Point2D(2, 1)));
     s.move(Vector2D(0, 3));
@@ -117,7 +115,6 @@ void testGroup() {
     CHECK(g->toString().find("Circle") != std::string::npos);
     CHECK(g->toString().find("Rectangle") != std::string::npos);
 
-    // вложенная группа
     auto inner = std::make_unique<Group>(std::make_unique<Circle>(Point2D(20, 20), 1));
     g->add(std::move(inner));
     CHECK(g->boundingBox() == Rect2D(Point2D(0, 0), Point2D(21, 21)));
@@ -128,14 +125,11 @@ void testGroup() {
 }
 
 void testGroupCycles() {
-    // 1) группу нельзя добавить в саму себя
     {
         auto g = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
         Group* raw = g.get();
         CHECK(throws([&] { raw->add(std::move(g)); }));
-        // g после этого уничтожена - к raw больше не обращаемся
     }
-    // 2) нельзя добавить внешнюю группу в свою же вложенную (косвенный цикл)
     {
         auto outer = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
         auto inner = std::make_unique<Group>(std::make_unique<Circle>(Point2D(5, 5), 1));
@@ -143,7 +137,6 @@ void testGroupCycles() {
         outer->add(std::move(inner));
         CHECK(throws([&] { innerRaw->add(std::move(outer)); }));
     }
-    // 3) обычное вложение продолжает работать
     {
         auto a = std::make_unique<Group>(std::make_unique<Circle>(Point2D(0, 0), 1));
         auto b = std::make_unique<Group>(std::make_unique<Circle>(Point2D(9, 9), 1));
@@ -158,7 +151,7 @@ void testPolymorphism() {
     shapes.push_back(std::make_unique<Rectangle>(Rect2D(Point2D(0, 0), Point2D(2, 2))));
     shapes.push_back(std::make_unique<Segment>(Point2D(0, 0), Point2D(2, 0)));
     for (auto& s : shapes) {
-        s->move(Vector2D(10, 10));        // один вызов, разное поведение
+        s->move(Vector2D(10, 10));
         CHECK(s->boundingBox().left() >= 9 - EPS);
     }
 }
@@ -209,7 +202,7 @@ void testRender() {
     Rect2D area(Point2D(0, 0), Point2D(3, 1));
     CHECK(render(ed, area) == "RRR \nRRR \n");
 
-    ed.add(std::make_unique<Circle>(Point2D(1, 1), 0.5)); // лежит выше
+    ed.add(std::make_unique<Circle>(Point2D(1, 1), 0.5));
     CHECK(render(ed, area) == "ROR \nRRR \n");
 
     Editor empty;
@@ -223,7 +216,6 @@ void demo() {
     ed.add(std::make_unique<Segment>(Point2D(0, 0), Point2D(28, 11)));
     std::cout << render(ed, Rect2D(Point2D(0, 0), Point2D(30, 12))) << "\n";
 }
-
 
 int main() {
     testVector();

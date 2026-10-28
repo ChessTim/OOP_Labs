@@ -8,7 +8,6 @@
 #include "heap.hpp"
 #include "task.hpp"
 
-// Правило 1: больший приоритет раньше. Ничья (равный приоритет) -> меньший id раньше.
 struct ByPriority {
     bool operator()(const Task& a, const Task& b) const {
         if (a.priority() != b.priority()) {
@@ -18,7 +17,6 @@ struct ByPriority {
     }
 };
 
-// Правило 2: более ранний срок раньше. Ничья (равный срок) -> меньший id раньше.
 struct ByDeadline {
     bool operator()(const Task& a, const Task& b) const {
         if (a.deadline() != b.deadline()) {
